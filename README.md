@@ -6,7 +6,7 @@ In order to make a presentation, create an Elm file with the
 presentation content, for example my-presentation.elm, and compile it
 together with the Preselm.elm file. Here is how you could do it:
 
-    elm --make my-presentation.elm Preselm.elm
+    elm --make my-presentation.elm
 
 If the compilation is successful, the my-presentation.html file with
 your presentation should be created.
