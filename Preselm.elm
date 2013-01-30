@@ -31,8 +31,8 @@ currentFrameIndexSignal =
     in { current = nextIndex, previous = indexes.current, indexChangeTime = t, transition = trans }
   in foldp step { current=0, previous=0, indexChangeTime=0, transition = NoTransition } (timestamp lastKeysDownSignal)
 
--- this signal has the elapsed time since the last frame index change, updated with the frequency of fps 10, 
-timeSinceIndexChangeSignal = timeOf (fpsWhen 10 (since second currentFrameIndexSignal))
+-- this signal has the elapsed time since the last frame index change, updated with the frequency of fps 60, 
+timeSinceIndexChangeSignal = timeOf (60 `fpsWhen` (second `since` currentFrameIndexSignal))
 
 -- context
 
@@ -155,20 +155,21 @@ buildFrame frame context = layers (justs $ map (\f -> f frame context) frameBuil
 
 slidingTransitionSelectors = 
   let twoFramesElement leftFrame rightFrame context = (buildFrame leftFrame context) `beside` (buildFrame rightFrame context)
+      getDelta windowWidth tsic = toFloat windowWidth * (1 - 0.9^(tsic `div` 10))
       moveFramesLeftToRight frames context =
-              let leftFrame = ithmod context.previousFrameIndex frames
-                  rightFrame = ithmod context.currentFrameIndex frames
-                  deltaX = context.windowWidth * context.timeSinceIndexChange `div` 1000
-                  twoFrames = twoFramesElement leftFrame rightFrame context
-                  position = topLeftAt (absolute (0-deltaX)) (absolute 0)
-              in container context.windowWidth context.windowHeight position twoFrames
+          let leftFrame = ithmod context.previousFrameIndex frames
+              rightFrame = ithmod context.currentFrameIndex frames
+              deltaX = getDelta context.windowWidth context.timeSinceIndexChange
+              twoFrames = twoFramesElement leftFrame rightFrame context
+              position = topLeftAt (absolute (0-deltaX)) (absolute 0)
+          in container context.windowWidth context.windowHeight position twoFrames
       moveFramesRightToLeft frames context =
-              let leftFrame = ithmod context.currentFrameIndex frames
-                  rightFrame = ithmod context.previousFrameIndex frames
-                  deltaX = context.windowWidth * context.timeSinceIndexChange `div` 1000
-                  twoFrames = twoFramesElement leftFrame rightFrame context
-                  position = topLeftAt (absolute (deltaX-context.windowWidth)) (absolute 0)
-              in container context.windowWidth context.windowHeight position twoFrames
+          let leftFrame = ithmod context.currentFrameIndex frames
+              rightFrame = ithmod context.previousFrameIndex frames
+              deltaX = getDelta context.windowWidth context.timeSinceIndexChange
+              twoFrames = twoFramesElement leftFrame rightFrame context
+              position = topLeftAt (absolute (deltaX-context.windowWidth)) (absolute 0)
+          in container context.windowWidth context.windowHeight position twoFrames
       selectLTR context =
         if context.transition == ForwardTransition && context.timeSinceIndexChange < 1000
         then Just moveFramesLeftToRight
