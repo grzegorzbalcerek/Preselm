@@ -1,5 +1,11 @@
 -- Copyright (c) 2013 Grzegorz Balcerek; see the LICENSE.txt file
 
+module Tutorial where
+
+import Window
+import Keyboard
+
+import Preselm (..)
 import Preselm
 
 --------------------------
@@ -37,13 +43,13 @@ frame2 = { emptyFrame | title <- Just \"Goodbye\", middle <- Just [markdown|#Wor
 
 main = presentation [frame1, frame2]"
 
-frame3 = { emptyFrame | title <- Just "Hello World", column1 <- Just $ [markdown|Let’s create a simple presentation. You can follow the steps described here.
+frame3 = { emptyFrame | title <- Just "Hello World", column1 <- Just <| [markdown|Let’s create a simple presentation. You can follow the steps described here.
 
-Create a text file called *HelloWorld.elm* with the content shown on the right hand side.
+Create a centered file called *HelloWorld.elm* with the content shown on the right hand side.
 
 Then you need to compile it together with Preselm. Here is how you can do it:
 
-    elm --make HelloWorld.elm Preselm.elm
+    elm --make HelloWorld.elm
 
 If the compilation is successful you should get the *HelloWorld.html* file with your presentation.
 
@@ -52,7 +58,7 @@ When you open it in a browser, you should get a Preselm presentation with two fr
 After those two frames the tutorial will continue.
 
 Press *Enter* to continue. |],
- column2 <- Just (text $ monospace $ toText hwProgram) }
+ column2 <- Just (centered <| monospace <| toText hwProgram) }
 
 --------------------------
 
@@ -64,7 +70,7 @@ hwframe2 = { emptyFrame | title <- Just "Goodbye", middle <- Just [markdown|#Wor
 
 --------------------------
 
-frame4 = { emptyFrame | column1 <- Just $ [markdown|
+frame4 = { emptyFrame | column1 <- Just <| [markdown|
 
 We are back to the tutorial.
 
@@ -147,4 +153,13 @@ frame9 = { emptyFrame | middle <- Just [markdown|## This the end of the tutorial
 
 --------------------------
 
-main = presentation [frame1, frame2, frame3, hwframe1, hwframe2, frame4, frame5, frame6, frame7, frame8, frame9 ]
+keys = (\x -> [x]) <~  Keyboard.lastPressed
+
+handle : [Keyboard.KeyCode] -> Maybe Preselm.Action
+handle keys = if | keys == [39] || keys == [78] || keys == [13] -> Just Preselm.Forward
+                 | keys == [37] || keys == [80]                 -> Just Preselm.Backward
+                 | keys == [35] || keys == [69]                 -> Just Preselm.End
+                 | keys == [36] || keys == [72]                 -> Just Preselm.Home
+                 | otherwise                                    -> Nothing
+
+main = presentation [frame1, frame2, frame3, hwframe1, hwframe2, frame4, frame5, frame6, frame7, frame8, frame9] (constant (500, 700)) keys handle
